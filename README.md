@@ -1,0 +1,5 @@
+Study Perk is a web application that have there features:
+- Start learning: User select time to learn then click start button then the clock will count down until it finish will have a sound to notify user and user got 1 spin
+- Spin wheel: User use the spin to spin the wheel to get the base reward. (The wheel content is reward) and save into chest
+- Draw cards: User will user base reward saved in chest to draw card to get bonus coefficient. User will draw 3 cards from 52 playing cards. Then sum all the point of cards (J Q K cards is 10 points). Then divide by 10 and take the remainder. If the result is 9 user will get 10 point, other value will keep. Then use this to multiplied by the base coefficient reward and save to list rewardsReceived. If the result is 0 user will get nothing.
+- View History: User can view all the history of rewardsReceived and can sort by time, search by reward name and filter by time. User also can click use reward to move it to rewardsUsed
