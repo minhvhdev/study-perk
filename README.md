@@ -1,5 +1,82 @@
-Study Perk is a web application that have there features:
-- Start learning: User select time to learn then click start button then the clock will count down until it finish will have a sound to notify user and user got 1 spin
-- Spin wheel: User use the spin to spin the wheel to get the base reward. (The wheel content is reward) and save into chest
-- Draw cards: User will user base reward saved in chest to draw card to get bonus coefficient. User will draw 3 cards from 52 playing cards. Then sum all the point of cards (J Q K cards is 10 points). Then divide by 10 and take the remainder. If the result is 9 user will get 10 point, other value will keep. Then use this to multiplied by the base coefficient reward and save to list rewardsReceived. If the result is 0 user will get nothing.
-- View History: User can view all the history of rewardsReceived and can sort by time, search by reward name and filter by time. User also can click use reward to move it to rewardsUsed
+# 🎓 Study Perk
+
+**Study Perk** is a premium, gamified study productivity application designed to make focused learning rewarding. By combining deep work sessions with an interactive reward system, it turns every study session into an opportunity to earn perks and collect rare cards.
+
+---
+
+## ✨ Key Features
+
+### ⏱️ Focused Study Timer
+
+- **Customizable Intervals**: Quick-select durations or fine-tune your study targets.
+- **Deep Focus Mode**: Immersive countdown with ambient sounds (Rain, Waves, Forest, White Noise) to minimize distractions.
+- **Smart Persistence**: Your timer state and selected durations persist across page reloads.
+- **Completion Rewards**: Finish a session to receive notification sounds and earn **Reward Spins**.
+
+### 🎡 Reward Spin Wheel
+
+- **Earn as You Learn**: Every completed study session grants you spins.
+- **Interactive Wheel**: Vibrant, high-performance animations powered by Framer Motion.
+- **Store Your Loot**: Winning rewards are automatically saved to your inventory (Chest).
+
+### 🃏 Lucky Card Draw
+
+- **Multiply Your Gains**: Use base rewards from your chest to play a high-stakes card game.
+- **The Rules of Luck**:
+  - Draw 3 cards from a standard 52-card deck.
+  - Calculate your "Luck Score": `Sum of cards (Face cards = 10) % 10`.
+  - **The Perfect 9**: If your remainder is 9, your score is boosted to 10!
+  - **Multiplier Power**: Your Luck Score multiplies your base reward.
+  - **Risk & Reward**: A 0 score means no reward—play wisely.
+
+### 📊 Progress Tracking & History
+
+- **Study Analytics**: Visualize your learning habits with interactive charts.
+- **Reward Management**: Keep track of every perk you've earned, use them when needed, and view your used history.
+- **Localization**: Full support for English and Vietnamese translations.
+
+---
+
+## 🚀 Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Storage**: [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) (via IDB-Keyval)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/)
+
+---
+
+## 🛠️ Getting Started
+
+First, install the dependencies:
+
+```bash
+pnpm install
+```
+
+Then, run the development server:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+---
+
+## 📂 Project Structure
+
+- `app/`: Next.js App Router components and pages.
+  - `_components/`: Shared UI components (Timer, Stats, Sidebar).
+  - `_store/`: Global state management with Zustand.
+  - `_constants/`: Configuration and static data (Translations, Sounds).
+  - `reward-spin/`: The spin wheel module.
+  - `draw-lucky-cards/`: The card game module.
+- `public/`: Static assets like sound files and images.
+
+---
+
+Built with ❤️ for productive students everywhere.
