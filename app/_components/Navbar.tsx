@@ -2,7 +2,7 @@
 
 import { useUIStore } from '@/app/_store';
 import { TRANSLATIONS } from '@/app/_constants/app-translations.constant';
-import { Menu, Sun, Moon, Globe, User } from 'lucide-react';
+import { Menu, Sun, Moon, Globe } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { TabId } from '@/app/_types/app-ui.type';
 

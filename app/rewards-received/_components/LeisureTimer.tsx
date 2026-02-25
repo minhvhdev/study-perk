@@ -105,7 +105,7 @@ const LeisureClock = ({ name, time }: { name: string; time: string }) => {
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
             className="absolute top-full left-1/2 -translate-x-1/2 translate-y-1 mt-3 z-110 whitespace-nowrap"
           >
-            <div className="bg-slate-900/95 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl shadow-2xl border border-white/10 whitespace-normal text-center leading-relaxed whitespace-nowrap">
+            <div className="bg-slate-900/95 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl shadow-2xl border border-white/10 whitespace-normal text-center leading-relaxed">
               {name}
             </div>
           </motion.div>
