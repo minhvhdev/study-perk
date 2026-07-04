@@ -1,0 +1,5 @@
+{
+  "schema_version": "clearpath.policy.v1",
+  "design_approval": "chat_approval",
+  "artifact_reading": "progressive_retrieval"
+}

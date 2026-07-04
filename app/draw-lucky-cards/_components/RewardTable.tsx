@@ -33,7 +33,7 @@ import {
   Square,
 } from 'lucide-react';
 import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-import { get } from 'idb-keyval';
+import { getUserJsonState } from '@/app/_utils/app-remote-storage.util';
 import { DrawCardModal } from './DrawCardModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
@@ -92,7 +92,9 @@ export const RewardTable = () => {
         if (item.type === 'nothing') continue;
         // Only fetch if we don't have it yet to avoid excessive DB calls
         if (!statuses[item.id]) {
-          const state = await get(`draw-card-state-${item.id}`);
+          const state = await getUserJsonState<{ isGameOver?: boolean }>(
+            `draw-card-state-${item.id}`,
+          );
           if (!state) {
             newStatuses[item.id] = 'Available';
           } else if (state.isGameOver) {
@@ -529,7 +531,9 @@ export const RewardTable = () => {
             onClose={async () => {
               setSelectedReward(null);
               // Update status after modal close
-              const state = await get(`draw-card-state-${selectedReward.id}`);
+              const state = await getUserJsonState<{ isGameOver?: boolean }>(
+                `draw-card-state-${selectedReward.id}`,
+              );
               const status: Status = !state
                 ? 'Available'
                 : state.isGameOver

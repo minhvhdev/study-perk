@@ -1,0 +1,105 @@
+{
+  "schema_version": "clearpath.artifact_index.v1",
+  "generated_at": "2026-07-04T01:44:35Z",
+  "active_change_id": "none",
+  "current_phase": "unknown",
+  "boot_files": [
+    ".clearpath/docs/BOOT.md",
+    ".clearpath/docs/CURRENT_CONTEXT.md"
+  ],
+  "current_state": [
+    ".clearpath/docs/STATE.md",
+    ".clearpath/docs/PRODUCT.md",
+    ".clearpath/docs/DECISIONS.md",
+    ".clearpath/docs/PROJECT_INDEX.json"
+  ],
+  "prototype_root": ".clearpath/prototype/",
+  "active_change": {
+    "index": null,
+    "phase_required": {
+      "initialize": [
+        ".clearpath/docs/BOOT.md",
+        ".clearpath/docs/CURRENT_CONTEXT.md"
+      ],
+      "discuss": [
+        "CHANGE.md"
+      ],
+      "spec": [
+        "CHANGE.md",
+        "SPEC.md"
+      ],
+      "design": [
+        "SPEC.md",
+        "UI_CONTRACT.md"
+      ],
+      "architecture": [
+        "SPEC.md",
+        "IMPACT_ANALYSIS.md"
+      ],
+      "plan": [
+        "PLAN.md"
+      ],
+      "execute": [
+        "PLAN.md",
+        "context-packs/<task-id>.md"
+      ],
+      "verify": [
+        "QA.md"
+      ],
+      "review": [
+        "REVIEW.md",
+        "QA.md"
+      ],
+      "release": [
+        "RELEASE_CANDIDATE.md",
+        "QA.md"
+      ]
+    }
+  },
+  "read_policy": [
+    "Read BOOT.md first.",
+    "Read CURRENT_CONTEXT.md second.",
+    "Use this index and the active CHANGE_INDEX.md before reading details.",
+    "Never read .clearpath/docs/changes/** or .clearpath/docs/** wholesale.",
+    "Prototypes live under .clearpath/prototype/ (HTML + Tailwind CSS).",
+    "Evidence and archive files are on-demand only."
+  ],
+  "artifacts": [
+    {
+      "path": ".clearpath\\docs\\AUTOPILOT.md",
+      "size_bytes": 808
+    },
+    {
+      "path": ".clearpath\\docs\\BOOT.md",
+      "size_bytes": 3191
+    },
+    {
+      "path": ".clearpath\\docs\\CURRENT_CONTEXT.md",
+      "size_bytes": 619
+    },
+    {
+      "path": ".clearpath\\docs\\DECISIONS.md",
+      "size_bytes": 237
+    },
+    {
+      "path": ".clearpath\\docs\\PRODUCT.md",
+      "size_bytes": 221
+    },
+    {
+      "path": ".clearpath\\docs\\PROJECT_INDEX.json",
+      "size_bytes": 340
+    },
+    {
+      "path": ".clearpath\\docs\\STATE.md",
+      "size_bytes": 454
+    },
+    {
+      "path": ".clearpath\\docs\\policy.json",
+      "size_bytes": 131
+    },
+    {
+      "path": ".clearpath\\prototype\\index.html",
+      "size_bytes": 693
+    }
+  ]
+}

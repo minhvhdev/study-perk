@@ -8,7 +8,7 @@ import {
   Dices,
   Spade,
   Trophy,
-  History,
+  Users,
   ChevronLeft,
   ChevronRight,
   GraduationCap,
@@ -19,15 +19,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useRewardSpinStore } from '@/app/reward-spin/_store';
+import { useSession } from '@/app/_hooks/useSession';
+import { useHydrated } from '@/app/_hooks/useHydrated';
 
 const sidebarItems = [
   { id: 'study', icon: BookOpen, href: '/' },
   { id: 'spin', icon: Dices, href: '/reward-spin' },
   { id: 'draw', icon: Spade, href: '/draw-lucky-cards' },
   { id: 'rewards', icon: Trophy, href: '/rewards-received' },
+  { id: 'admin', icon: Users, href: '/admin', adminOnly: true },
 ];
 
 export const Sidebar = () => {
+  const hydrated = useHydrated();
   const {
     isSidebarCollapsed,
     setSidebarCollapsed,
@@ -36,6 +40,7 @@ export const Sidebar = () => {
     setActiveTab,
   } = useUIStore();
   const { spinCount, rewardHistory, boostCount } = useRewardSpinStore();
+  const { isAdmin } = useSession();
 
   const drawCount = rewardHistory.filter(
     (item) => item.multiplier === undefined && item.type !== 'nothing',
@@ -50,6 +55,9 @@ export const Sidebar = () => {
 
   const t = TRANSLATIONS[language];
   const pathname = usePathname();
+  const visibleSidebarItems = sidebarItems.filter(
+    (item) => !item.adminOnly || isAdmin,
+  );
 
   useEffect(() => {
     const activeItem = sidebarItems.find((item) => item.href === pathname);
@@ -57,6 +65,12 @@ export const Sidebar = () => {
       setActiveTab(activeItem.id as TabId);
     }
   }, [pathname, setActiveTab]);
+
+  if (!hydrated) {
+    return (
+      <aside className="h-screen sticky top-0 w-20 bg-card border-r border-border shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50" />
+    );
+  }
 
   return (
     <motion.aside
@@ -85,7 +99,7 @@ export const Sidebar = () => {
 
       {/* Navigation Items */}
       <nav className="flex-1 px-3 py-4 space-y-2">
-        {sidebarItems.map((item) => {
+        {visibleSidebarItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
 

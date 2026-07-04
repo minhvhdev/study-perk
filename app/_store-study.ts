@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { StudyState, StudySettings, TimerStatus } from './_types/study.type';
-import { indexedDBStorage } from './_utils/app-storage.util';
+import { remoteStateStorage } from './_utils/app-remote-storage.util';
 import { useRewardSpinStore } from './reward-spin/_store';
 
 const DEFAULT_SETTINGS: StudySettings = {
@@ -152,7 +152,7 @@ export const useStudyStore = create<StudyState>()(
       }),
       {
         name: 'study-perk-timer',
-        storage: createJSONStorage(() => indexedDBStorage),
+        storage: createJSONStorage(() => remoteStateStorage),
         partialize: (state: StudyState) => ({
           targetSeconds: state.targetSeconds,
           history: state.history,

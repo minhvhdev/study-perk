@@ -1,0 +1,13 @@
+{
+  "schema_version": "clearpath.project_index.v1",
+  "status": "draft",
+  "modules": [],
+  "test_commands": [],
+  "build_commands": [],
+  "release_commands": [],
+  "mcp_notes": {
+    "serena": "Use for symbol/reference navigation.",
+    "codebase-memory": "Use for large repo indexing.",
+    "chrome-devtools": "Use for browser QA."
+  }
+}

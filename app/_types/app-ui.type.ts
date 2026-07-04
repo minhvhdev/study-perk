@@ -1,6 +1,6 @@
 export type Language = 'en' | 'vi';
 
-export type TabId = 'study' | 'spin' | 'draw' | 'rewards';
+export type TabId = 'study' | 'spin' | 'draw' | 'rewards' | 'admin';
 
 export type UIState = {
   isSidebarCollapsed: boolean;

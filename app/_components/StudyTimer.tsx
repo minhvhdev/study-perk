@@ -111,6 +111,21 @@ export const StudyTimer = () => {
 
   const formatTime = (val: number) => val.toString().padStart(2, '0');
 
+  const formatTargetLabel = (value: number) => {
+    const hours = Math.floor(value / 3600);
+    const mins = (value % 3600) / 60;
+
+    if (hours > 0 && mins > 0) {
+      return `${hours}h ${mins}m`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h`;
+    }
+
+    return `${mins}m`;
+  };
+
   const adjustTime = useCallback(
     (delta: number) => {
       const newTime = Math.max(60, targetSeconds + delta);
@@ -143,11 +158,7 @@ export const StudyTimer = () => {
             )}
           >
             <Clock size={16} className="text-primary" />
-            <span>
-              {targetSeconds / 60 >= 60
-                ? `${targetSeconds / 3600}h`
-                : `${targetSeconds / 60}m`}
-            </span>
+            <span>{formatTargetLabel(targetSeconds)}</span>
             <ChevronDown
               size={16}
               className={cn(
@@ -218,6 +229,7 @@ export const StudyTimer = () => {
             stroke="currentColor"
             strokeWidth="10"
             strokeDasharray="942.47"
+            strokeDashoffset={942.47}
             animate={{ strokeDashoffset: 942.47 * (1 - progress) }}
             transition={{ duration: 1, ease: 'linear' }}
             className="text-primary stroke-round"

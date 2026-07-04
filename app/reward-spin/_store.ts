@@ -5,7 +5,7 @@ import {
   WheelEntry,
   RewardHistoryItem,
 } from './_types/reward-spin.type';
-import { indexedDBStorage } from '@/app/_utils/app-storage.util';
+import { remoteStateStorage } from '@/app/_utils/app-remote-storage.util';
 
 const getEntryLabel = (entry: Partial<WheelEntry>) => {
   if (entry.name) return entry.name;
@@ -198,7 +198,7 @@ export const useRewardSpinStore = create<RewardSpinState>()(
       }),
       {
         name: 'reward-spin-storage',
-        storage: createJSONStorage(() => indexedDBStorage),
+        storage: createJSONStorage(() => remoteStateStorage),
         partialize: (state) => ({
           entries: state.entries,
           spinCount: state.spinCount,

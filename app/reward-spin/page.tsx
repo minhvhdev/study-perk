@@ -7,11 +7,17 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Trophy, X } from 'lucide-react';
 import { useUIStore } from '../_store';
 import { TRANSLATIONS } from '../_constants/app-translations.constant';
+import { useHydrated } from '../_hooks/useHydrated';
 
 const RewardSpinPage = () => {
+  const hydrated = useHydrated();
   const { winner, claimWinner } = useRewardSpinStore();
   const { language } = useUIStore();
   const t = TRANSLATIONS[language].spinPage;
+
+  if (!hydrated) {
+    return <div className="h-full w-full" />;
+  }
 
   return (
     <div className="lg:h-[calc(100vh-120px)] flex flex-col lg:flex-row bg-background rounded-4xl overflow-hidden border border-border shadow-2xl relative">

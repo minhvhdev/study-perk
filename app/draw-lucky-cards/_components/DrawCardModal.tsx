@@ -15,7 +15,10 @@ import {
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/app/_utils/app-cn.util';
-import { get, set } from 'idb-keyval';
+import {
+  getUserJsonState,
+  setUserJsonState,
+} from '@/app/_utils/app-remote-storage.util';
 import { useRewardSpinStore } from '../../reward-spin/_store';
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades' | 'special';
@@ -42,6 +45,14 @@ type CardItem = {
   score: number;
   isJoker?: boolean;
   jokerType?: 'black' | 'red';
+};
+
+type DrawCardState = {
+  deck: CardItem[];
+  phase: 'shuffling' | 'picking';
+  pickedCardIds: string[];
+  flippedCardIds: string[];
+  isGameOver: boolean;
 };
 
 const SUITS: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
@@ -101,6 +112,8 @@ const generateDeck = () => {
   return newDeck.sort(() => Math.random() - 0.5);
 };
 
+const getCurrentTimestamp = () => Date.now();
+
 const SUIT_ICONS = {
   hearts: { icon: Heart, color: 'text-red-500', fill: 'fill-red-500' },
   diamonds: { icon: Diamond, color: 'text-red-500', fill: 'fill-red-500' },
@@ -135,7 +148,9 @@ export const DrawCardModal = ({
   useEffect(() => {
     const loadState = async () => {
       try {
-        const savedState = await get(`draw-card-state-${item.id}`);
+        const savedState = await getUserJsonState<DrawCardState>(
+          `draw-card-state-${item.id}`,
+        );
         if (savedState) {
           setDeck(savedState.deck);
           setPickedCardIds(savedState.pickedCardIds);
@@ -174,7 +189,7 @@ export const DrawCardModal = ({
 
   useEffect(() => {
     if (!isLoaded) return;
-    set(`draw-card-state-${item.id}`, {
+    void setUserJsonState(`draw-card-state-${item.id}`, {
       deck,
       phase,
       pickedCardIds,
@@ -231,7 +246,7 @@ export const DrawCardModal = ({
     // Update the store with the result
     updateHistoryItem(item.id, {
       multiplier: scoreData.multiplier,
-      finishedAt: Date.now(),
+      finishedAt: getCurrentTimestamp(),
     });
   };
 

@@ -6,10 +6,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { StudyTimer } from './_components/StudyTimer';
 import { StudyTodayCard, StudyChartCard } from './_components/StudyStats';
 import { StudyTypeCard, StudySoundsCard } from './_components/StudySettings';
+import { useHydrated } from './_hooks/useHydrated';
 
 export default function Home() {
+  const hydrated = useHydrated();
   const { activeTab, language } = useUIStore();
   const t = TRANSLATIONS[language];
+
+  if (!hydrated) {
+    return <div className="h-full w-full" />;
+  }
 
   return (
     <div className="h-full w-full mx-auto flex flex-col">

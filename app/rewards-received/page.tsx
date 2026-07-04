@@ -7,10 +7,16 @@ import { Wallet } from './_components/Wallet';
 import { LeisureTimer } from './_components/LeisureTimer';
 import { useUIStore } from '@/app/_store';
 import { TRANSLATIONS } from '@/app/_constants/app-translations.constant';
+import { useHydrated } from '@/app/_hooks/useHydrated';
 
 export default function RewardReceivedPage() {
+  const hydrated = useHydrated();
   const { language } = useUIStore();
   const t = TRANSLATIONS[language].rewardsReceivedPage;
+
+  if (!hydrated) {
+    return <div className="h-full w-full" />;
+  }
 
   return (
     <div className="h-full flex flex-col gap-6 bg-background rounded-4xl p-8 overflow-hidden border border-border shadow-2xl">

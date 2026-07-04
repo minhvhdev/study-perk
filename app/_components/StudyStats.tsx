@@ -264,12 +264,12 @@ export const StudyChartCard = () => {
                 }
                 return label;
               }}
-              formatter={(
-                value: number | string | undefined,
-                name: string | number | undefined,
-              ) => {
+              formatter={(value, name) => {
+                const normalizedValue = Array.isArray(value)
+                  ? value.join(', ')
+                  : (value ?? 0);
                 const type = studyTypes.find((t) => t.id === String(name));
-                return [`${value || 0}h`, type ? type.name : String(name)];
+                return [`${normalizedValue}h`, type ? type.name : String(name)];
               }}
             />
             {studyTypes.map((type, index) => (
