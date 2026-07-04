@@ -1,4 +1,5 @@
 allowBuilds:
+  "@minhvhdev/hf-db-sdk@https://codeload.github.com/minhvhdev/hf-db-sdk/tar.gz/4870e48245913a82b00deefc30278a5f8280c074": true
   sharp: false
   unrs-resolver: false
 ignoredBuiltDependencies:
