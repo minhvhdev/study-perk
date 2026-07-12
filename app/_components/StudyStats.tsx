@@ -79,7 +79,7 @@ export const StudyTodayCard = () => {
             className={cn(
               'flex items-center gap-2 px-4 py-2.5 rounded-2xl transition-all border font-bold text-sm shadow-sm active:scale-95',
               isBoostEnabled && boostCount > 0
-                ? 'bg-purple-500 text-white border-purple-400 shadow-purple-500/20'
+                ? 'bg-primary text-primary-foreground border-primary/80 shadow-primary/20'
                 : 'bg-background/50 text-muted-foreground border-border/50',
               (boostCount === 0 || status === 'running') &&
                 'opacity-50 cursor-not-allowed',
@@ -92,7 +92,7 @@ export const StudyTodayCard = () => {
             )}
             {t.useBoost}
           </button>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-500/10 text-purple-600 rounded-full">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full">
             <Zap size={12} fill="currentColor" />
             <span className="text-[10px] font-black uppercase tracking-wider">
               {boostCount} {t.boosts}

@@ -355,7 +355,7 @@ export const StudyHistoryModal = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {item.isBoosted ? (
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-500/10 text-purple-600 rounded-full w-fit group">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full w-fit group">
                           <Zap
                             size={12}
                             fill="currentColor"

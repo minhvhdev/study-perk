@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useRewardSpinStore } from '../../reward-spin/_store';
 import {
@@ -33,9 +33,11 @@ import {
   Square,
 } from 'lucide-react';
 import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-import { getUserJsonState } from '@/app/_utils/app-remote-storage.util';
 import { DrawCardModal } from './DrawCardModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { Skeleton } from '@/app/_components/skeletons/Skeleton';
+import { getUserJsonState } from '@/app/_utils/app-remote-storage.util';
+import { useDrawCardStatuses, DrawCardStatus } from '@/app/_hooks/useDrawCardStatuses';
 
 const TYPE_ICONS: Record<RewardEntryType, any> = {
   monetary: Coins,
@@ -48,7 +50,7 @@ const TYPE_ICONS: Record<RewardEntryType, any> = {
 const TYPE_COLORS: Record<RewardEntryType, string> = {
   monetary: 'text-amber-500',
   leisure: 'text-blue-500',
-  boost: 'text-purple-500',
+  boost: 'text-primary',
   'extra-spin': 'text-green-500',
   nothing: 'text-slate-400',
 };
@@ -58,67 +60,38 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
-type Status = 'Available' | 'InProcess' | 'Done';
-
 export const RewardTable = () => {
   const { rewardHistory, removeHistoryItems } = useRewardSpinStore();
   const { language } = useUIStore();
   const translations = TRANSLATIONS[language];
+  const { statuses, isLoading: isStatusesLoading, isItemPending, setItemStatus } =
+    useDrawCardStatuses(rewardHistory);
 
   const [selectedReward, setSelectedReward] =
     useState<RewardHistoryItem | null>(null);
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<RewardEntryType | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<DrawCardStatus | 'all'>('all');
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'receivedAt',
     direction: 'desc',
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [statuses, setStatuses] = useState<Record<string, Status>>({});
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const itemsPerPage = 10;
-
-  // Initial and reactive status fetch for all items
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      const newStatuses: Record<string, Status> = {};
-      let hasNew = false;
-
-      for (const item of rewardHistory) {
-        if (item.type === 'nothing') continue;
-        // Only fetch if we don't have it yet to avoid excessive DB calls
-        if (!statuses[item.id]) {
-          const state = await getUserJsonState<{ isGameOver?: boolean }>(
-            `draw-card-state-${item.id}`,
-          );
-          if (!state) {
-            newStatuses[item.id] = 'Available';
-          } else if (state.isGameOver) {
-            newStatuses[item.id] = 'Done';
-          } else {
-            newStatuses[item.id] = 'InProcess';
-          }
-          hasNew = true;
-        }
-      }
-
-      if (hasNew) {
-        setStatuses((prev) => ({ ...prev, ...newStatuses }));
-      }
-    };
-    fetchStatuses();
-  }, [rewardHistory, statuses]);
 
   // Filtering
   const filteredData = useMemo(() => {
     return rewardHistory.filter((item) => {
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
-      const itemStatus = statuses[item.id] || 'Available';
-      const statusMatch = statusFilter === 'all' || itemStatus === statusFilter;
+      const isPending = item.type !== 'nothing' && isItemPending(item.id);
+      const itemStatus = statuses[item.id];
+      const statusMatch =
+        statusFilter === 'all' ||
+        (!isPending && itemStatus === statusFilter);
 
       let dateMatch = true;
       if (fromDate || toDate) {
@@ -132,7 +105,15 @@ export const RewardTable = () => {
 
       return typeMatch && statusMatch && dateMatch;
     });
-  }, [rewardHistory, typeFilter, statusFilter, statuses, fromDate, toDate]);
+  }, [
+    rewardHistory,
+    typeFilter,
+    statusFilter,
+    statuses,
+    fromDate,
+    toDate,
+    isItemPending,
+  ]);
 
   // Sorting
   const sortedData = useMemo(() => {
@@ -354,10 +335,21 @@ export const RewardTable = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {paginatedData.map((item) => {
+              {isStatusesLoading && paginatedData.length === 0 ? (
+                Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <tr key={rowIndex}>
+                    <td colSpan={7} className="px-6 py-4">
+                      <Skeleton className="h-10 w-full rounded-xl" />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+              paginatedData.map((item) => {
                 const Icon = TYPE_ICONS[item.type];
                 const colorClass = TYPE_COLORS[item.type];
-                const itemStatus = statuses[item.id] || 'Available';
+                const itemStatus = statuses[item.id];
+                const isPending =
+                  item.type !== 'nothing' && isItemPending(item.id);
                 const isSelected = selectedIds.includes(item.id);
 
                 return (
@@ -414,7 +406,10 @@ export const RewardTable = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {item.type !== 'nothing' && (
+                      {item.type !== 'nothing' && isPending ? (
+                        <Skeleton className="h-5 w-28" />
+                      ) : (
+                        item.type !== 'nothing' && (
                         <div className="flex items-center gap-2">
                           {itemStatus === 'Available' && (
                             <>
@@ -447,10 +442,14 @@ export const RewardTable = () => {
                             </>
                           )}
                         </div>
+                        )
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {item.type !== 'nothing' && (
+                      {item.type !== 'nothing' && isPending ? (
+                        <Skeleton className="ml-auto h-9 w-24 rounded-xl" />
+                      ) : (
+                        item.type !== 'nothing' && itemStatus && (
                         <button
                           onClick={() => setSelectedReward(item)}
                           className={cn(
@@ -463,11 +462,13 @@ export const RewardTable = () => {
                           {itemStatus === 'Done' ? t.view : t.draw}
                           <ExternalLink size={12} />
                         </button>
+                        )
                       )}
                     </td>
                   </tr>
                 );
-              })}
+              })
+              )}
               {paginatedData.length === 0 && (
                 <tr>
                   <td
@@ -529,17 +530,22 @@ export const RewardTable = () => {
           <DrawCardModal
             item={selectedReward}
             onClose={async () => {
+              if (!selectedReward) return;
+              const closedId = selectedReward.id;
               setSelectedReward(null);
-              // Update status after modal close
+              if (selectedReward.multiplier !== undefined) {
+                setItemStatus(closedId, 'Done');
+                return;
+              }
               const state = await getUserJsonState<{ isGameOver?: boolean }>(
-                `draw-card-state-${selectedReward.id}`,
+                `draw-card-state-${closedId}`,
               );
-              const status: Status = !state
+              const status: DrawCardStatus = !state
                 ? 'Available'
                 : state.isGameOver
                   ? 'Done'
                   : 'InProcess';
-              setStatuses((prev) => ({ ...prev, [selectedReward.id]: status }));
+              setItemStatus(closedId, status);
             }}
           />
         )}

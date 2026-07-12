@@ -6,16 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { StudyTimer } from './_components/StudyTimer';
 import { StudyTodayCard, StudyChartCard } from './_components/StudyStats';
 import { StudyTypeCard, StudySoundsCard } from './_components/StudySettings';
-import { useHydrated } from './_hooks/useHydrated';
 
 export default function Home() {
-  const hydrated = useHydrated();
   const { activeTab, language } = useUIStore();
   const t = TRANSLATIONS[language];
-
-  if (!hydrated) {
-    return <div className="h-full w-full" />;
-  }
 
   return (
     <div className="h-full w-full mx-auto flex flex-col">
@@ -61,7 +55,7 @@ export default function Home() {
               <p className="text-xl text-muted-foreground max-w-xl mx-auto">
                 {t.homePage.placeholderTitle}
               </p>
-              <div className="mt-10 p-12 rounded-4xl bg-linear-to-br from-primary/10 via-background to-purple-500/10 border border-primary/20 flex flex-col items-center justify-center text-center gap-6 shadow-2xl shadow-primary/5 max-w-3xl mx-auto">
+              <div className="mt-10 p-12 rounded-4xl bg-linear-to-br from-primary/10 via-background to-teal-600/10 border border-primary/20 flex flex-col items-center justify-center text-center gap-6 shadow-2xl shadow-primary/5 max-w-3xl mx-auto">
                 <h2 className="text-3xl font-bold">{t.homePage.readyToEarn}</h2>
                 <p className="text-muted-foreground max-w-md text-lg">
                   {t.homePage.readyToEarnDesc}

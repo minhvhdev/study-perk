@@ -84,7 +84,7 @@ export function AuthForm() {
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-border bg-linear-to-br from-primary/10 via-background to-purple-500/10 p-8 shadow-2xl shadow-primary/5">
+        <div className="rounded-[2rem] border border-border bg-linear-to-br from-primary/10 via-background to-teal-600/10 p-8 shadow-2xl shadow-primary/5">
           <div className="max-w-xl space-y-5">
             <div className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-primary">
               Study Perk
@@ -129,7 +129,6 @@ export function AuthForm() {
                 id="password"
                 type="password"
                 required
-                minLength={8}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder={t.passwordPlaceholder}

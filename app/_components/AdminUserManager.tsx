@@ -1,8 +1,10 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Shield, UserPlus, Users } from 'lucide-react';
+import { Shield, Trash2, UserPlus, Users } from 'lucide-react';
 
+import { DeleteConfirmModal } from '@/app/draw-lucky-cards/_components/DeleteConfirmModal';
+import { TableSkeleton } from '@/app/_components/skeletons/TableSkeleton';
 import { TRANSLATIONS } from '@/app/_constants/app-translations.constant';
 import { useUIStore } from '@/app/_store';
 import { useSession } from '@/app/_hooks/useSession';
@@ -26,6 +28,8 @@ export function AdminUserManager() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
+  const [userToDelete, setUserToDelete] = useState<AdminListUser | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,9 +120,48 @@ export function AdminUserManager() {
     }
   }
 
+  async function handleDeleteUser() {
+    if (!userToDelete) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setDeletingUserId(userToDelete.id);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+        username?: string;
+      };
+
+      if (!response.ok) {
+        setError(data.error ?? t.deleteError);
+        return;
+      }
+
+      setUsers((prev) => prev.filter((entry) => entry.id !== userToDelete.id));
+      setSuccess(
+        t.deleteSuccess.replace(
+          '{username}',
+          data.username ?? userToDelete.username,
+        ),
+      );
+    } catch {
+      setError(t.deleteError);
+    } finally {
+      setDeletingUserId(null);
+      setUserToDelete(null);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-[2rem] border border-border bg-linear-to-br from-primary/10 via-background to-purple-500/10 p-8 shadow-2xl shadow-primary/5">
+      <div className="rounded-[2rem] border border-border bg-linear-to-br from-primary/10 via-background to-teal-600/10 p-8 shadow-2xl shadow-primary/5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-primary">
@@ -178,7 +221,6 @@ export function AdminUserManager() {
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder={t.passwordPlaceholder}
                 className="h-12 w-full rounded-2xl border border-border bg-background px-4 outline-hidden transition focus:ring-2 focus:ring-primary/20"
-                minLength={8}
                 required
               />
             </div>
@@ -217,9 +259,7 @@ export function AdminUserManager() {
           </div>
 
           {isLoading ? (
-            <div className="rounded-2xl border border-border bg-background px-4 py-12 text-center text-muted-foreground">
-              {t.loading}
-            </div>
+            <TableSkeleton rows={6} columns={4} />
           ) : (
             <div className="overflow-hidden rounded-3xl border border-border">
               <table className="w-full border-collapse text-left">
@@ -233,6 +273,9 @@ export function AdminUserManager() {
                     </th>
                     <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
                       {t.tableCreatedAt}
+                    </th>
+                    <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+                      {t.tableActions}
                     </th>
                   </tr>
                 </thead>
@@ -250,6 +293,26 @@ export function AdminUserManager() {
                       <td className="px-5 py-4 text-sm text-muted-foreground">
                         {new Date(entry.createdAt).toLocaleString()}
                       </td>
+                      <td className="px-5 py-4">
+                        {entry.role === 'admin' ? (
+                          <span className="text-xs font-medium text-muted-foreground">
+                            —
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setUserToDelete(entry)}
+                            disabled={deletingUserId === entry.id}
+                            aria-label={t.deleteAction}
+                            className="inline-flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-destructive transition hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Trash2 size={14} />
+                            {deletingUserId === entry.id
+                              ? t.deleting
+                              : t.deleteAction}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -264,6 +327,18 @@ export function AdminUserManager() {
           )}
         </div>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={userToDelete !== null}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        title={t.deleteConfirmTitle}
+        description={t.deleteConfirmDescription.replace(
+          '{username}',
+          userToDelete?.username ?? '',
+        )}
+        count={0}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useStudyStore } from '@/app/_store-study';
+import { useStudyStore, getRemainingSecondsFromState } from '@/app/_store-study';
 import { useUIStore } from '@/app/_store';
 import { TRANSLATIONS } from '@/app/_constants/app-translations.constant';
 import { cn } from '@/app/_utils/app-cn.util';
@@ -26,9 +26,10 @@ const DURATION_OPTIONS = [
 
 export const StudyTimer = () => {
   const {
-    remainingSeconds,
     targetSeconds,
     status,
+    finishTime,
+    remainingSeconds: storedRemaining,
     startTimer,
     stopTimer,
     resetTimer,
@@ -42,6 +43,7 @@ export const StudyTimer = () => {
 
   const [mounted, setMounted] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -57,19 +59,35 @@ export const StudyTimer = () => {
     }
   }, [mounted, syncWithIndexedDB]);
 
-  // Handle Tick
+  // Handle Tick — only completes the timer in the store; display time is derived locally
   useEffect(() => {
+    const syncNow = () => setNow(Date.now());
+
     if (status === 'running') {
+      const frameId = requestAnimationFrame(syncNow);
       intervalRef.current = setInterval(() => {
+        syncNow();
         tick();
       }, 1000);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+
+      return () => {
+        cancelAnimationFrame(frameId);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
     }
+
+    const frameId = requestAnimationFrame(syncNow);
+
     return () => {
+      cancelAnimationFrame(frameId);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [status, tick]);
+
+  const remainingSeconds = getRemainingSecondsFromState(
+    { status, finishTime, targetSeconds, remainingSeconds: storedRemaining },
+    now,
+  );
 
   // Handle Ambient Sound
   useEffect(() => {

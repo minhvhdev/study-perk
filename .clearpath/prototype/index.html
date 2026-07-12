@@ -1,16 +1,249 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clearpath Prototype</title>
+  <title>Study Perk — Calm Study Palette</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(var(--background) / <alpha-value>)',
+            foreground: 'hsl(var(--foreground) / <alpha-value>)',
+            card: 'hsl(var(--card) / <alpha-value>)',
+            primary: 'hsl(var(--primary) / <alpha-value>)',
+            'primary-foreground': 'hsl(var(--primary-foreground) / <alpha-value>)',
+            secondary: 'hsl(var(--secondary) / <alpha-value>)',
+            muted: 'hsl(var(--muted) / <alpha-value>)',
+            'muted-foreground': 'hsl(var(--muted-foreground) / <alpha-value>)',
+            border: 'hsl(var(--border) / <alpha-value>)',
+            accent: 'hsl(var(--accent) / <alpha-value>)',
+            reward: 'hsl(var(--reward) / <alpha-value>)',
+          },
+          borderRadius: {
+            '4xl': '2rem',
+          },
+          fontFamily: {
+            sans: ['Segoe UI', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      /* Calm study palette — light */
+      --background: 158 22% 97%;
+      --foreground: 205 28% 16%;
+      --card: 0 0% 100%;
+      --primary: 166 42% 36%;
+      --primary-foreground: 158 20% 98%;
+      --secondary: 158 18% 93%;
+      --muted: 158 16% 94%;
+      --muted-foreground: 205 12% 42%;
+      --accent: 158 24% 90%;
+      --border: 158 14% 87%;
+      --reward: 38 88% 52%;
+    }
+
+    .dark {
+      --background: 205 26% 9%;
+      --foreground: 158 16% 91%;
+      --card: 205 22% 12%;
+      --primary: 166 38% 48%;
+      --primary-foreground: 205 26% 9%;
+      --secondary: 205 20% 15%;
+      --muted: 205 18% 14%;
+      --muted-foreground: 205 10% 62%;
+      --accent: 205 18% 16%;
+      --border: 205 18% 18%;
+      --reward: 42 92% 58%;
+    }
+
+    body {
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
+
+    .hero-gradient {
+      background: linear-gradient(
+        135deg,
+        hsl(var(--primary) / 0.08) 0%,
+        hsl(var(--background)) 45%,
+        hsl(166 30% 88% / 0.35) 100%
+      );
+    }
+
+    .dark .hero-gradient {
+      background: linear-gradient(
+        135deg,
+        hsl(var(--primary) / 0.12) 0%,
+        hsl(var(--background)) 50%,
+        hsl(205 22% 14%) 100%
+      );
+    }
+
+    .timer-ring {
+      background: conic-gradient(
+        hsl(var(--primary)) 0deg 240deg,
+        hsl(var(--border)) 240deg 360deg
+      );
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
-  <main class="mx-auto max-w-3xl px-6 py-16">
-    <p class="text-sm uppercase tracking-widest text-slate-400">Clearpath prototype</p>
-    <h1 class="mt-4 text-4xl font-semibold tracking-tight">Replace this screen</h1>
-    <p class="mt-4 text-slate-300">All Clearpath UI prototypes use HTML and Tailwind CSS (CDN). Open this file in a browser to preview.</p>
+<body class="min-h-screen antialiased transition-colors duration-300">
+  <!-- Prototype header -->
+  <header class="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">Clearpath prototype</p>
+        <h1 class="text-lg font-black text-foreground">Calm Study Palette</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <button
+          id="themeToggle"
+          class="px-4 py-2 rounded-full border border-border bg-secondary text-sm font-bold text-foreground hover:bg-accent transition-colors"
+        >
+          Toggle dark
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+    <!-- Rationale -->
+    <section class="rounded-4xl border border-border bg-card p-8 shadow-sm">
+      <p class="text-xs font-black uppercase tracking-[0.18em] text-primary mb-3">Design read</p>
+      <h2 class="text-2xl font-black tracking-tight mb-3">Màu dịu mắt, giúp tập trung học lâu</h2>
+      <p class="text-muted-foreground max-w-3xl leading-relaxed">
+        Thay tím bão hòa cao bằng <strong class="text-foreground">sage-teal</strong> — tông xanh lá-xanh biển nhẹ,
+        gợi cảm giác tĩnh lặng và tập trung. Nền pha xanh rất nhạt giảm mỏi mắt; phần thưởng vẫn dùng
+        <strong class="text-reward">amber</strong> để tạo niềm vui mà không cạnh tranh với vùng học tập.
+      </p>
+      <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="space-y-2"><div class="h-12 rounded-xl bg-primary"></div><p class="text-xs font-bold">Primary</p></div>
+        <div class="space-y-2"><div class="h-12 rounded-xl bg-background border border-border"></div><p class="text-xs font-bold">Background</p></div>
+        <div class="space-y-2"><div class="h-12 rounded-xl bg-card border border-border"></div><p class="text-xs font-bold">Card</p></div>
+        <div class="space-y-2"><div class="h-12 rounded-xl bg-secondary"></div><p class="text-xs font-bold">Secondary</p></div>
+        <div class="space-y-2"><div class="h-12 rounded-xl bg-reward"></div><p class="text-xs font-bold">Reward</p></div>
+        <div class="space-y-2"><div class="h-12 rounded-xl bg-border"></div><p class="text-xs font-bold">Border</p></div>
+      </div>
+    </section>
+
+    <!-- App shell mock -->
+    <section class="rounded-4xl border border-border overflow-hidden shadow-2xl bg-card">
+      <div class="flex min-h-[640px]">
+        <!-- Sidebar -->
+        <aside class="w-72 border-r border-border bg-card hidden md:flex flex-col">
+          <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-black shadow-lg shadow-primary/20">SP</div>
+            <span class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-teal-600">Study Perk</span>
+          </div>
+          <nav class="flex-1 px-3 space-y-2">
+            <a href="#" class="flex items-center gap-3 p-3 rounded-xl bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20">
+              <span>📚</span> Học Bài Thôi
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors">
+              <span>🎡</span> Quay Thưởng
+              <span class="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-reward text-[10px] font-black text-amber-950 flex items-center justify-center">2</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 rounded-xl text-muted-foreground hover:bg-secondary transition-colors">
+              <span>🃏</span> Rút Bài May Mắn
+            </a>
+          </nav>
+        </aside>
+
+        <!-- Main -->
+        <div class="flex-1 flex flex-col bg-background">
+          <div class="h-16 border-b border-border px-6 flex items-center justify-between bg-background/80 backdrop-blur-md">
+            <p class="font-bold">Học Bài Thôi</p>
+            <div class="flex gap-2">
+              <button class="px-4 py-2 rounded-full bg-secondary text-sm font-medium">VI</button>
+              <button class="px-4 py-2 rounded-full bg-secondary text-sm font-medium">🌙</button>
+            </div>
+          </div>
+
+          <div class="flex-1 p-6 grid grid-cols-1 xl:grid-cols-3 gap-6 overflow-auto">
+            <!-- Timer -->
+            <div class="xl:col-span-1 rounded-4xl border border-border/60 bg-card/30 p-8 flex flex-col items-center justify-center min-h-[380px]">
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Focus timer</p>
+              <div class="relative w-56 h-56 rounded-full p-3 timer-ring">
+                <div class="w-full h-full rounded-full bg-card flex flex-col items-center justify-center shadow-inner">
+                  <span class="text-5xl font-black tracking-tight tabular-nums">45:00</span>
+                  <span class="text-sm font-bold text-muted-foreground mt-2 uppercase tracking-widest">English</span>
+                </div>
+              </div>
+              <div class="mt-8 flex gap-3">
+                <button class="h-12 px-8 rounded-2xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20">Bắt đầu</button>
+                <button class="h-12 px-6 rounded-2xl border border-border bg-secondary font-bold">Reset</button>
+              </div>
+            </div>
+
+            <!-- Stats + settings -->
+            <div class="xl:col-span-2 space-y-6">
+              <div class="rounded-4xl border border-border bg-card p-6 shadow-sm">
+                <p class="text-sm font-black uppercase tracking-[0.16em] text-muted-foreground mb-2">Hôm nay</p>
+                <p class="text-4xl font-black text-primary">2h 15m</p>
+                <p class="text-muted-foreground mt-1">3 phiên học hoàn thành</p>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div class="rounded-3xl border border-border bg-card p-5">
+                  <p class="font-bold mb-3">Loại môn học</p>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold">English</span>
+                    <span class="px-3 py-1.5 rounded-full bg-secondary text-muted-foreground text-sm font-bold">French</span>
+                  </div>
+                </div>
+                <div class="rounded-3xl border border-border bg-card p-5">
+                  <p class="font-bold mb-3">Âm thanh</p>
+                  <div class="flex gap-2">
+                    <span class="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold">Rain</span>
+                    <span class="px-3 py-1.5 rounded-full bg-secondary text-muted-foreground text-sm font-bold">Forest</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-4xl hero-gradient border border-primary/15 p-6">
+                <p class="text-sm font-black uppercase tracking-[0.16em] text-primary mb-2">Phần thưởng</p>
+                <p class="text-lg font-bold">Hoàn thành phiên học để nhận lượt quay</p>
+                <button class="mt-4 h-11 px-6 rounded-2xl bg-reward text-amber-950 font-black shadow-md">Quay ngay — 2 lượt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Before / After -->
+    <section class="grid md:grid-cols-2 gap-6">
+      <div class="rounded-4xl border border-border p-6 bg-white">
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-purple-600 mb-2">Hiện tại</p>
+        <div class="rounded-3xl p-6 bg-gradient-to-br from-purple-500/10 to-white border border-purple-200">
+          <button class="w-full h-11 rounded-2xl bg-purple-600 text-white font-black mb-4">Purple primary</button>
+          <p class="text-sm text-slate-500">Tím bão hòa cao — dễ gây mỏi mắt khi học lâu, cảm giác "AI app".</p>
+        </div>
+      </div>
+      <div class="rounded-4xl border border-border p-6 bg-card">
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-primary mb-2">Đề xuất</p>
+        <div class="rounded-3xl p-6 hero-gradient border border-primary/20">
+          <button class="w-full h-11 rounded-2xl bg-primary text-primary-foreground font-black mb-4">Sage-teal primary</button>
+          <p class="text-sm text-muted-foreground">Xanh sage dịu — tập trung, thư giãn, phù hợp session học dài.</p>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <script>
+    const root = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('click', () => {
+      root.classList.toggle('dark');
+      toggle.textContent = root.classList.contains('dark') ? 'Toggle light' : 'Toggle dark';
+    });
+  </script>
 </body>
 </html>

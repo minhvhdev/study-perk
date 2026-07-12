@@ -12,13 +12,17 @@ import {
   Spade as SpadeIcon,
   Pointer,
   Ghost,
-  Loader2,
+  HelpCircle,
+  Star,
 } from 'lucide-react';
+import { DrawCardModalSkeleton } from '@/app/_components/skeletons/DrawCardModalSkeleton';
 import { cn } from '@/app/_utils/app-cn.util';
 import {
   getUserJsonState,
   setUserJsonState,
 } from '@/app/_utils/app-remote-storage.util';
+import { useUIStore } from '@/app/_store';
+import { TRANSLATIONS } from '@/app/_constants/app-translations.constant';
 import { useRewardSpinStore } from '../../reward-spin/_store';
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades' | 'special';
@@ -53,6 +57,69 @@ type DrawCardState = {
   pickedCardIds: string[];
   flippedCardIds: string[];
   isGameOver: boolean;
+  hopeStarEnabled?: boolean;
+};
+
+type ScoreResult = {
+  score: number;
+  multiplier: number;
+  totalScore: number;
+  isInstant: boolean;
+  instantType?: 'redJoker' | 'blackJoker';
+  hopeStarApplied: boolean;
+};
+
+const calculateScoreData = (
+  hand: CardItem[],
+  hopeStarEnabled: boolean,
+): ScoreResult => {
+  const hasRedJoker = hand.some((c) => c.id === 'joker-red');
+  const hasBlackJoker = hand.some((c) => c.id === 'joker-black');
+
+  if (hasRedJoker) {
+    return {
+      score: 10,
+      multiplier: 10,
+      totalScore: 0,
+      isInstant: true,
+      instantType: 'redJoker',
+      hopeStarApplied: false,
+    };
+  }
+
+  if (hasBlackJoker) {
+    return {
+      score: 0,
+      multiplier: 0,
+      totalScore: 0,
+      isInstant: true,
+      instantType: 'blackJoker',
+      hopeStarApplied: false,
+    };
+  }
+
+  const totalScore = hand.reduce((sum, card) => sum + card.score, 0);
+  const score = totalScore % 10;
+  let multiplier = totalScore === 9 ? 10 : score;
+
+  if (hopeStarEnabled) {
+    multiplier = multiplier <= 5 ? 0 : multiplier * 2;
+    return {
+      score,
+      multiplier,
+      totalScore,
+      isInstant: false,
+      hopeStarApplied: true,
+    };
+  }
+
+  return {
+    score,
+    multiplier,
+    totalScore,
+    isInstant: false,
+    hopeStarApplied: false,
+  };
 };
 
 const SUITS: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
@@ -119,15 +186,15 @@ const SUIT_ICONS = {
   diamonds: { icon: Diamond, color: 'text-red-500', fill: 'fill-red-500' },
   clubs: {
     icon: Club,
-    color: 'text-slate-800 dark:text-slate-200',
-    fill: 'fill-slate-800 dark:fill-slate-200',
+    color: 'text-slate-900',
+    fill: 'fill-slate-900',
   },
   spades: {
     icon: SpadeIcon,
-    color: 'text-slate-800 dark:text-slate-200',
-    fill: 'fill-slate-800 dark:fill-slate-200',
+    color: 'text-slate-900',
+    fill: 'fill-slate-900',
   },
-  special: { icon: Ghost, color: 'text-purple-500', fill: 'fill-purple-500' },
+  special: { icon: Ghost, color: 'text-primary', fill: 'fill-primary' },
 };
 
 export const DrawCardModal = ({
@@ -138,12 +205,17 @@ export const DrawCardModal = ({
   onClose: () => void;
 }) => {
   const { updateHistoryItem } = useRewardSpinStore();
+  const { language } = useUIStore();
+  const t = TRANSLATIONS[language].drawCardModal;
   const [phase, setPhase] = useState<'shuffling' | 'picking'>('shuffling');
   const [pickedCardIds, setPickedCardIds] = useState<string[]>([]);
   const [flippedCardIds, setFlippedCardIds] = useState<string[]>([]);
   const [isGameOver, setIsGameOver] = useState(false);
   const [deck, setDeck] = useState<CardItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [hopeStarEnabled, setHopeStarEnabled] = useState(false);
+  const canToggleHopeStar = !isGameOver && pickedCardIds.length === 0;
 
   useEffect(() => {
     const loadState = async () => {
@@ -156,6 +228,7 @@ export const DrawCardModal = ({
           setPickedCardIds(savedState.pickedCardIds);
           setFlippedCardIds(savedState.flippedCardIds);
           setIsGameOver(savedState.isGameOver);
+          setHopeStarEnabled(savedState.hopeStarEnabled ?? false);
           // Only start timer if it was shuffling and no cards picked
           if (
             savedState.phase === 'shuffling' &&
@@ -195,6 +268,7 @@ export const DrawCardModal = ({
       pickedCardIds,
       flippedCardIds,
       isGameOver,
+      hopeStarEnabled,
     });
   }, [
     isLoaded,
@@ -203,6 +277,7 @@ export const DrawCardModal = ({
     pickedCardIds,
     flippedCardIds,
     isGameOver,
+    hopeStarEnabled,
     item.id,
   ]);
 
@@ -211,41 +286,21 @@ export const DrawCardModal = ({
       .map((id) => deck.find((c) => c.id === id))
       .filter(Boolean) as CardItem[];
 
-    const hasRedJoker = hand.some((c) => c.id === 'joker-red');
-    const hasBlackJoker = hand.some((c) => c.id === 'joker-black');
-
-    if (hasRedJoker)
-      return {
-        score: 10,
-        multiplier: 10,
-        totalScore: 0,
-        isInstant: true,
-        type: 'RED JOKER',
-      };
-    if (hasBlackJoker)
-      return {
-        score: 0,
-        multiplier: 0,
-        totalScore: 0,
-        isInstant: true,
-        type: 'BLACK JOKER',
-      };
-
-    const totalScore = hand.reduce((sum, c) => sum + c.score, 0);
-    const score = totalScore % 10;
-    const multiplier = totalScore === 9 ? 10 : score;
-    return { score, multiplier, totalScore, isInstant: false };
-  }, [pickedCardIds, deck]);
+    return calculateScoreData(hand, hopeStarEnabled);
+  }, [pickedCardIds, deck, hopeStarEnabled]);
 
   const finishGame = (finalHandIds?: string[]) => {
-    setIsGameOver(true);
-    const hand = finalHandIds || pickedCardIds;
-    // When game is over, we'll reveal everything in the render logic via isGameOver
-    setFlippedCardIds((prev) => Array.from(new Set([...prev, ...hand])));
+    const handIds = finalHandIds || pickedCardIds;
+    const hand = handIds
+      .map((id) => deck.find((c) => c.id === id))
+      .filter(Boolean) as CardItem[];
+    const finalScore = calculateScoreData(hand, hopeStarEnabled);
 
-    // Update the store with the result
+    setIsGameOver(true);
+    setFlippedCardIds((prev) => Array.from(new Set([...prev, ...handIds])));
+
     updateHistoryItem(item.id, {
-      multiplier: scoreData.multiplier,
+      multiplier: finalScore.multiplier,
       finishedAt: getCurrentTimestamp(),
     });
   };
@@ -298,12 +353,12 @@ export const DrawCardModal = ({
   };
 
   const getMessage = () => {
-    if (isGameOver) return 'REWARD CALCULATED';
-    if (pickedCardIds.length < 2) return 'PICK 2 CARDS';
+    if (isGameOver) return t.rewardCalculated;
+    if (pickedCardIds.length < 2) return t.pickTwoCards;
     if (pickedCardIds.length === 2 && flippedCardIds.length === 0)
-      return 'REVEAL 1 OR DRAW MORE';
+      return t.revealOneOrDraw;
     if (pickedCardIds.length === 2 && flippedCardIds.length === 1)
-      return 'REVEAL ALL OR DRAW MORE';
+      return t.revealAllOrDraw;
     return '';
   };
 
@@ -322,43 +377,39 @@ export const DrawCardModal = ({
     if (isPicked) {
       const pickedIndex = pickedCardIds.indexOf(id);
       return {
-        x: (pickedIndex - (pickedCardIds.length - 1) / 2) * 160,
-        y: 280,
+        x: (pickedIndex - (pickedCardIds.length - 1) / 2) * 150,
+        y: 180,
         rotate: 0,
-        scale: 1.1,
+        scale: 1.05,
         zIndex: 1000 + pickedIndex,
       };
     }
 
-    // Fan-out for deck cards
+    // Fan-out for deck cards (centered on anchor point)
     const availableCards = deck.filter((c) => !pickedCardIds.includes(c.id));
     const cardIndexInAvailable = availableCards.findIndex((c) => c.id === id);
     if (cardIndexInAvailable === -1) return { x: 0, y: 0, rotate: 0, scale: 0 };
 
     const total = availableCards.length;
-    const fanWidth = 140;
+    const fanWidth = 168;
     const startAngle = -fanWidth / 2;
     const angleStep = total > 1 ? fanWidth / (total - 1) : 0;
     const angle = startAngle + cardIndexInAvailable * angleStep;
 
     const rad = (angle * Math.PI) / 180;
-    const radius = 650;
+    const radius = 480;
 
     return {
       x: Math.sin(rad) * radius,
-      y: -Math.cos(rad) * radius + 400,
+      y: -Math.cos(rad) * radius + 300,
       rotate: angle,
-      scale: 0.85,
+      scale: 0.82,
       zIndex: 10 + cardIndexInAvailable,
     };
   };
 
   if (!isLoaded) {
-    return (
-      <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-950/95 backdrop-blur-3xl">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    );
+    return <DrawCardModalSkeleton />;
   }
 
   return (
@@ -366,102 +417,227 @@ export const DrawCardModal = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-100 flex items-center justify-center bg-slate-950/95 backdrop-blur-3xl"
+      className="dark fixed inset-0 z-100 bg-background/95 backdrop-blur-md text-foreground"
     >
-      <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden p-6 select-none">
-        {/* Shuffling Background Overlay */}
+      <div className="relative flex h-full w-full flex-col overflow-hidden">
+        {/* Header */}
+        <div className="relative z-40 flex items-start justify-between gap-4 border-b border-border/80 bg-card/40 px-5 py-4 backdrop-blur-sm md:px-8 md:py-5">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <SpadeIcon size={24} fill="currentColor" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="truncate text-xl font-black tracking-tight md:text-2xl">
+                  {t.title}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsRulesOpen(true)}
+                  aria-label={t.rulesButton}
+                  title={t.rulesButton}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+                >
+                  <HelpCircle size={16} />
+                </button>
+              </div>
+              <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+                {t.subtitle}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-secondary text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <X size={22} />
+          </button>
+          </div>
+        </div>
+
+        {/* Hope Star — only before first card pick */}
+        {canToggleHopeStar && (
+          <div className="relative z-110 px-4 pt-3 md:px-8">
+            <div className="mx-auto flex max-w-2xl justify-center">
+              <div className="group relative">
+                <button
+                  type="button"
+                  onClick={() => setHopeStarEnabled((prev) => !prev)}
+                  aria-pressed={hopeStarEnabled}
+                  aria-describedby="hope-star-hint"
+                  className={cn(
+                    'inline-flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-bold transition-all active:scale-[0.98]',
+                    hopeStarEnabled
+                      ? 'border-amber-400/50 bg-amber-400/15 text-amber-300 shadow-sm shadow-amber-400/10'
+                      : 'border-border bg-card/80 text-muted-foreground hover:border-amber-400/30 hover:text-amber-200',
+                  )}
+                >
+                  <Star
+                    size={18}
+                    className={cn(
+                      hopeStarEnabled && 'fill-amber-400 text-amber-400',
+                    )}
+                  />
+                  <span>
+                    {hopeStarEnabled ? t.hopeStarActive : t.hopeStarInactive}
+                  </span>
+                </button>
+                <div
+                  id="hope-star-hint"
+                  role="tooltip"
+                  className="pointer-events-none absolute left-1/2 top-[calc(100%+0.5rem)] z-120 w-max max-w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card px-3 py-2 text-center text-xs leading-relaxed text-muted-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                >
+                  {t.hopeStarHint}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hopeStarEnabled && !canToggleHopeStar && !isGameOver && (
+          <div className="relative z-50 px-4 pt-3 md:px-8">
+            <div className="mx-auto flex max-w-2xl justify-center">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-sm font-bold text-amber-300">
+                <Star size={16} className="fill-amber-400 text-amber-400" />
+                {t.hopeStarLocked}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Rules dialog */}
+        <AnimatePresence>
+          {isRulesOpen && (
+            <div className="fixed inset-0 z-120 flex items-center justify-center p-4">
+              <motion.button
+                type="button"
+                aria-label={t.rulesClose}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsRulesOpen(false)}
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                className="relative z-10 w-full max-w-lg rounded-3xl border border-border bg-card p-6 shadow-2xl"
+              >
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-black tracking-tight">
+                      {t.rulesTitle}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRulesOpen(false)}
+                    aria-label={t.rulesClose}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-secondary text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                <ol className="max-h-[min(60vh,420px)] space-y-3 overflow-y-auto pr-1 text-sm leading-relaxed text-muted-foreground">
+                  {t.rules.map((rule, index) => (
+                    <li key={rule} className="flex gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+                        {index + 1}
+                      </span>
+                      <span>{rule}</span>
+                    </li>
+                  ))}
+                </ol>
+                <button
+                  type="button"
+                  onClick={() => setIsRulesOpen(false)}
+                  className="mt-5 h-11 w-full rounded-2xl bg-primary text-sm font-black text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  {t.rulesClose}
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Status */}
+        {phase === 'picking' && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-50 px-4 pt-5 md:px-8"
+          >
+            <div className="mx-auto flex max-w-2xl flex-col items-center gap-2 text-center">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-border bg-card/90 px-5 py-3 shadow-sm">
+                {isGameOver ? (
+                  <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+                ) : (
+                  <Pointer className="h-5 w-5 shrink-0 animate-pulse text-primary" />
+                )}
+                <span className="text-base font-bold md:text-lg">{getMessage()}</span>
+              </div>
+              {!isGameOver && pickedCardIds.length >= 2 && (
+                <p className="max-w-md text-sm text-muted-foreground">
+                  {t.revealHint}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Shuffling overlay */}
         <AnimatePresence>
           {phase === 'shuffling' && (
             <motion.div
               initial={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-100 bg-slate-950/80 flex flex-col items-center justify-center pointer-events-none"
+              exit={{ opacity: 0, transition: { duration: 0.3, ease: 'easeOut' } }}
+              className="absolute inset-0 z-100 flex flex-col items-center justify-center bg-background/90 pointer-events-none"
             >
-              <div className="relative w-48 h-64 mb-12">
+              <div className="relative mb-8 h-56 w-40">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <motion.div
                     key={i}
                     animate={{
-                      x: [0, (i - 2.5) * 80, 0],
-                      y: [0, i % 2 ? -40 : 40, 0],
-                      rotate: [0, (i - 2.5) * 25, 0],
-                      scale: [1, 1.15, 1],
+                      x: [0, (i - 2.5) * 64, 0],
+                      y: [0, i % 2 ? -32 : 32, 0],
+                      rotate: [0, (i - 2.5) * 18, 0],
+                      scale: [1, 1.08, 1],
                     }}
                     transition={{
                       duration: 0.8,
                       repeat: Infinity,
                       delay: i * 0.08,
                     }}
-                    className="absolute inset-0 bg-primary border-[6px] border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-linear-to-br from-primary to-primary/80"
+                    className="absolute inset-0 rounded-2xl border-4 border-primary/20 bg-linear-to-br from-primary to-primary/80 shadow-xl"
                   />
                 ))}
               </div>
-              <motion.span
-                animate={{ opacity: [0.3, 0.7, 0.3] }}
+              <motion.p
+                animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-5xl font-black text-white italic tracking-[0.5em] uppercase"
+                className="text-lg font-bold text-foreground md:text-xl"
               >
-                Dealing...
-              </motion.span>
+                {t.dealing}
+              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Global Prompt Message */}
-        {phase === 'picking' && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute top-[10%] z-50 flex flex-col items-center gap-2"
-          >
-            <div className="flex items-center gap-4 px-10 py-4 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl shadow-2xl">
-              {isGameOver ? (
-                <Sparkles className="text-primary" />
-              ) : (
-                <Pointer className="text-primary animate-pulse" />
-              )}
-              <span className="text-2xl font-black text-white tracking-[0.2em] uppercase">
-                {getMessage()}
-              </span>
-            </div>
-            {!isGameOver && pickedCardIds.length >= 2 && (
-              <p className="text-white/30 font-black text-[10px] uppercase tracking-[0.3em] mt-3 animate-pulse">
-                Reveal picked card or draw new from deck
-              </p>
-            )}
-          </motion.div>
-        )}
-
-        {/* Header Branding */}
-        <div className="absolute top-0 left-0 right-0 p-10 flex justify-between items-start z-40">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-2xl shadow-primary/30">
-              <SpadeIcon size={32} fill="currentColor" />
-            </div>
-            <div>
-              <h2 className="text-5xl font-black text-white tracking-tighter leading-none">
-                THE HIGH TABLE
-              </h2>
-              <p className="text-primary text-[10px] font-black tracking-[0.5em] uppercase mt-1.5 opacity-60">
-                Dealer&apos;s Choice
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-16 h-16 rounded-4xl bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all border border-white/10 flex items-center justify-center"
-          >
-            <X size={28} />
-          </button>
-        </div>
-
-        {/* Card Field Area */}
-        <div className="relative w-full h-full flex items-center justify-center max-w-7xl">
+        {/* Card field — cards positioned from screen center */}
+        <div className="relative min-h-0 flex-1 px-4 pb-40 pt-4 md:pb-44">
+          <div className="absolute left-1/2 top-[42%] h-0 w-0 -translate-x-1/2 -translate-y-1/2">
           {deck.map((card, index) => {
             const pos = getCardPosition(card.id, index);
             const isPicked = pickedCardIds.includes(card.id);
             // REVEAL ALL cards if isGameOver is true
             const isFlipped = flippedCardIds.includes(card.id) || isGameOver;
+            const fanStaggerDelay =
+              (index / Math.max(deck.length - 1, 1)) * 0.5;
+            const isShuffling = phase === 'shuffling';
 
             const suitConfig =
               card.isJoker && card.jokerType === 'black'
@@ -485,30 +661,35 @@ export const DrawCardModal = ({
                   rotate: pos.rotate,
                   scale: pos.scale,
                   zIndex: pos.zIndex,
-                  opacity: phase === 'shuffling' && index > 8 ? 0 : 1,
+                  opacity: isShuffling ? 0.45 : 1,
                 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 400,
-                  damping: 40,
-                  delay: phase === 'shuffling' ? 0 : (index / 54) * 0.08,
-                }}
+                transition={
+                  isShuffling
+                    ? { duration: 0.15, ease: 'easeOut' }
+                    : {
+                        duration: 0.55,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: fanStaggerDelay,
+                      }
+                }
                 whileHover={
                   !isPicked && phase === 'picking' && !isGameOver
                     ? {
                         y: pos.y - 80,
                         scale: 0.95,
                         zIndex: 2000,
+                        transition: { duration: 0.2, ease: 'easeOut' },
                       }
                     : isPicked && !isFlipped && phase === 'picking'
                       ? {
                           y: pos.y - 30,
                           scale: 1.15,
                           zIndex: 3000,
+                          transition: { duration: 0.2, ease: 'easeOut' },
                         }
                       : {}
                 }
-                className="absolute w-40 h-56 cursor-pointer perspective-1000"
+                className="absolute h-52 w-36 -ml-[4.5rem] -mt-[6.5rem] cursor-pointer will-change-transform perspective-1000 md:h-56 md:w-40 md:-ml-20 md:-mt-28"
                 onClick={() => handleCardClick(card.id)}
               >
                 <div
@@ -518,17 +699,22 @@ export const DrawCardModal = ({
                   )}
                 >
                   {/* Card Front (Back Art) */}
-                  <div className="absolute inset-0 backface-hidden bg-primary border-10 border-white/5 outline outline-white/10 rounded-[1.25rem] flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent" />
-                    <div className="relative z-10 grid grid-cols-4 gap-3 opacity-10">
+                  <div className="absolute inset-0 backface-hidden flex items-center justify-center overflow-hidden rounded-[1.25rem] border-2 border-primary/30 bg-primary shadow-xl">
+                    <div className="absolute inset-0 bg-linear-to-br from-primary-foreground/10 to-transparent" />
+                    <div className="relative z-10 grid grid-cols-4 gap-2 opacity-20">
                       {Array.from({ length: 12 }).map((_, i) => (
-                        <SpadeIcon key={i} size={20} fill="white" />
+                        <SpadeIcon
+                          key={i}
+                          size={18}
+                          className="text-primary-foreground"
+                          fill="currentColor"
+                        />
                       ))}
                     </div>
                   </div>
 
                   {/* Card Back (Suit & Rank) */}
-                  <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white border-2 border-slate-200 rounded-[1.25rem] shadow-inner flex flex-col p-4">
+                  <div className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col rounded-[1.25rem] border border-border bg-[hsl(158,20%,98%)] p-4 text-slate-900 shadow-inner">
                     <div
                       className={cn(
                         'flex flex-col items-center absolute top-3 left-3',
@@ -558,7 +744,7 @@ export const DrawCardModal = ({
                             suitConfig.color,
                           )}
                         >
-                          {card.rank === 'Joker' ? 'JOKER' : card.rank}
+                          {card.rank === 'Joker' ? t.joker : card.rank}
                         </span>
                       </div>
                     </div>
@@ -579,22 +765,24 @@ export const DrawCardModal = ({
               </motion.div>
             );
           })}
+          </div>
         </div>
 
-        {/* Results Banner Overlay */}
+        {/* Results panel */}
         <AnimatePresence>
           {(pickedCardIds.length >= 2 || isGameOver) && (
             <motion.div
-              initial={{ opacity: 0, y: 150 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute bottom-10 w-full max-w-6xl px-6 pointer-events-none"
+              className="absolute inset-x-0 bottom-0 z-50 border-t border-border/80 bg-card/95 px-4 py-4 backdrop-blur-md md:px-8 md:py-5"
             >
-              <div className="bg-slate-900/60 backdrop-blur-3xl border border-white/10 p-10 rounded-[3.5rem] shadow-2xl flex items-center justify-between gap-12 overflow-hidden pointer-events-auto">
-                <div className="space-y-4">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">
-                    Active Hand
-                  </span>
-                  <div className="flex items-center gap-3">
+              <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-3 sm:items-stretch">
+                {/* Active hand */}
+                <div className="flex min-h-[7.5rem] flex-col rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-xs font-bold text-muted-foreground">
+                    {t.activeHand}
+                  </p>
+                  <div className="mt-3 flex flex-1 flex-wrap items-center justify-center gap-2">
                     {pickedCardIds.map((id) => {
                       const card = deck.find((c) => c.id === id)!;
                       const isFlipped =
@@ -603,18 +791,18 @@ export const DrawCardModal = ({
                         <div
                           key={id}
                           className={cn(
-                            'px-5 py-3 rounded-2xl border transition-all duration-300 min-w-[80px] text-center',
+                            'min-w-[72px] rounded-xl border px-4 py-2.5 text-center transition-all',
                             isFlipped
-                              ? 'bg-white text-slate-900 border-white shadow-xl'
-                              : 'bg-white/5 text-white/20 border-white/10 border-dashed',
+                              ? 'border-border bg-card text-foreground shadow-sm'
+                              : 'border-dashed border-border/70 bg-muted/40 text-muted-foreground',
                           )}
                         >
-                          <span className="text-2xl font-black uppercase tracking-tighter">
+                          <span className="text-xl font-black tabular-nums">
                             {isFlipped
                               ? card.rank === 'Joker'
                                 ? 'JK'
                                 : card.rank
-                              : '?'}
+                              : t.hiddenCard}
                           </span>
                         </div>
                       );
@@ -622,50 +810,73 @@ export const DrawCardModal = ({
                   </div>
                 </div>
 
-                <div className="flex flex-col border-l border-white/10 pl-12 gap-1.5">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">
-                    Score Card
-                  </span>
-                  <div className="flex items-center gap-6">
+                {/* Score */}
+                <div className="flex min-h-[7.5rem] flex-col rounded-2xl border border-border bg-background/60 p-4">
+                  <p className="text-xs font-bold text-muted-foreground">
+                    {t.scoreCard}
+                  </p>
+                  <div className="mt-3 flex flex-1 items-center">
                     {scoreData.isInstant ? (
-                      <span className="text-3xl font-black text-primary animate-pulse tracking-widest">
-                        {scoreData.type}!
-                      </span>
+                      <p className="w-full text-center text-xl font-black text-primary">
+                        {scoreData.instantType === 'redJoker'
+                          ? t.redJoker
+                          : t.blackJoker}
+                        !
+                      </p>
                     ) : (
-                      <>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs font-black text-white/40 uppercase">
-                            SUM:
-                          </span>
-                          <span className="text-3xl font-black text-white italic tabular-nums">
-                            {isGameOver ? scoreData.totalScore : '??'}
-                          </span>
+                      <div className="grid w-full grid-cols-2 gap-3">
+                        <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-center">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {t.sum}
+                          </p>
+                          <p className="mt-1 text-2xl font-black tabular-nums text-foreground">
+                            {isGameOver
+                              ? scoreData.totalScore
+                              : t.unknownScore}
+                          </p>
                         </div>
-                        <div className="w-px h-8 bg-white/10" />
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs font-black text-white/40 uppercase tracking-tighter">
-                            REMAINDER:
-                          </span>
-                          <span className="text-5xl font-black text-primary drop-shadow-[0_0_20px_rgba(234,179,8,0.3)]tabular-nums">
-                            {isGameOver ? scoreData.score : '??'}
-                          </span>
+                        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-center">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {t.remainder}
+                          </p>
+                          <p className="mt-1 text-2xl font-black tabular-nums text-primary md:text-3xl">
+                            {isGameOver ? scoreData.score : t.unknownScore}
+                          </p>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-10">
-                  <div className="text-right flex flex-col items-end">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.5em] mb-1.5">
-                      BONUS Multiplier
-                    </span>
-                    <div className="flex items-center gap-5">
-                      <span className="text-7xl font-black text-white tracking-tighter tabular-nums drop-shadow-2xl">
-                        {isGameOver ? `${scoreData.multiplier}x` : '—'}
-                      </span>
+                {/* Multiplier */}
+                <div className="flex min-h-[7.5rem] flex-col items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center">
+                  <p className="text-xs font-bold text-primary/80">
+                    {t.bonusMultiplier}
+                  </p>
+                  {hopeStarEnabled && !isGameOver ? (
+                    <div className="mt-2 flex flex-col items-center gap-1">
+                      <Star
+                        size={28}
+                        className="fill-amber-400 text-amber-400"
+                      />
+                      <p className="text-sm font-bold text-amber-300">
+                        {t.hopeStarPending}
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <p className="mt-2 text-4xl font-black tabular-nums text-primary md:text-5xl">
+                        {isGameOver
+                          ? `${scoreData.multiplier}x`
+                          : t.pendingMultiplier}
+                      </p>
+                      {isGameOver && scoreData.hopeStarApplied && (
+                        <p className="mt-1 text-xs font-semibold text-amber-400">
+                          {t.hopeStarApplied}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>

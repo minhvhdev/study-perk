@@ -75,13 +75,13 @@ export const RewardWheel = () => {
     ctx.strokeStyle = 'rgba(255,255,255,0.2)';
     ctx.stroke();
 
-    // Center cap
+    // Small center hub
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
+    ctx.arc(centerX, centerY, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
     ctx.fill();
-    ctx.shadowColor = 'rgba(0,0,0,0.2)';
-    ctx.shadowBlur = 10;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.stroke();
   }, [enabledEntries, rotation]);
 
@@ -158,59 +158,86 @@ export const RewardWheel = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [spin]);
 
+  const canSpin =
+    !isSpinning && enabledEntries.length > 0 && spinCount > 0;
+
   return (
-    <div className="relative flex-1 flex flex-col items-center justify-center p-8 overflow-hidden min-h-0">
+    <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden p-8">
       {/* Background Glow */}
-      <div className="absolute inset-0 bg-linear-to-b from-primary/5 to-purple-500/5 -z-10" />
+      <div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/5 to-teal-600/5" />
 
-      {/* The Wheel */}
-      <div
-        className={cn(
-          'relative group cursor-pointer transition-opacity duration-300',
-          spinCount <= 0 && !isSpinning && 'opacity-70 grayscale-[0.5]',
-        )}
-        onClick={spin}
-      >
-        <canvas
-          ref={canvasRef}
-          width={500}
-          height={500}
+      <div className="flex flex-col items-center gap-8">
+        {/* Wheel */}
+        <div
           className={cn(
-            'rounded-full transition-transform duration-300 max-w-[90vw] max-h-[60vh] lg:max-w-full lg:max-h-full h-auto w-auto',
-            isSpinning
-              ? 'scale-[1.05]'
-              : spinCount > 0
-                ? 'hover:scale-[1.02] shadow-2xl shadow-primary/10'
-                : 'cursor-not-allowed',
+            'relative transition-opacity duration-300',
+            canSpin ? 'cursor-pointer' : 'cursor-not-allowed',
+            spinCount <= 0 && !isSpinning && 'opacity-70 grayscale-[0.5]',
           )}
-        />
-
-        {/* Center Text */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none select-none">
-          <div className="bg-white/80 backdrop-blur-md px-6 py-2 rounded-full shadow-lg flex flex-col items-center border border-white/50">
-            <span className="text-black font-black text-xl whitespace-nowrap drop-shadow-sm">
-              {isSpinning
-                ? t.spinning
-                : spinCount > 0
-                  ? t.clickToSpin
-                  : t.outOfSpins}
-            </span>
-            {spinCount > 0 && !isSpinning && (
-              <span className="text-primary text-sm font-black mt-0.5">
-                {spinCount} {t.left}
-              </span>
+          onClick={spin}
+          role="button"
+          tabIndex={canSpin ? 0 : -1}
+          aria-label={canSpin ? t.clickToSpin : t.outOfSpins}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              spin();
+            }
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            width={500}
+            height={500}
+            className={cn(
+              'h-auto max-h-[52vh] w-auto max-w-[min(90vw,500px)] rounded-full transition-transform duration-300 lg:max-h-[min(52vh,500px)] lg:max-w-full',
+              isSpinning
+                ? 'scale-[1.03]'
+                : canSpin
+                  ? 'shadow-2xl shadow-primary/10 hover:scale-[1.015]'
+                  : '',
             )}
-          </div>
-          {spinCount > 0 && !isSpinning && (
-            <span className="text-white/40 text-base mt-2 font-medium">
-              {t.pressEnter}
-            </span>
-          )}
+          />
+
+          {/* Curved-base pointer */}
+          <svg
+            aria-hidden
+            viewBox="0 0 40 56"
+            className="pointer-events-none absolute top-1/2 -right-0.5 z-10 h-14 w-10 -translate-y-1/2 drop-shadow-lg"
+          >
+            <path
+              d="M 2 28 L 28 5 A 248 248 0 0 1 28 51 Z"
+              className="fill-destructive stroke-white"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
 
-        {/* Pointer */}
-        <div className="absolute right-[-10px] top-1/2 -translate-y-1/2 z-10">
-          <div className="w-10 h-10 bg-destructive transform rotate-45 rounded-sm shadow-xl border-4 border-white" />
+        {/* Spin button */}
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={spin}
+            disabled={!canSpin}
+            className={cn(
+              'min-w-[240px] rounded-2xl px-8 py-4 text-lg font-black transition-all',
+              canSpin
+                ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/25 hover:scale-[1.02] active:scale-95'
+                : 'cursor-not-allowed bg-secondary text-muted-foreground',
+            )}
+          >
+            {isSpinning
+              ? t.spinning
+              : spinCount > 0
+                ? t.clickToSpin
+                : t.outOfSpins}
+          </button>
+          {spinCount > 0 && !isSpinning && (
+            <p className="text-sm font-medium text-muted-foreground">
+              {spinCount} {t.left} · {t.pressEnter}
+            </p>
+          )}
         </div>
       </div>
     </div>

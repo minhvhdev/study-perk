@@ -4,16 +4,10 @@ import { RewardTable } from './_components/RewardTable';
 import { Spade } from 'lucide-react';
 import { useUIStore } from '@/app/_store';
 import { TRANSLATIONS } from '@/app/_constants/app-translations.constant';
-import { useHydrated } from '@/app/_hooks/useHydrated';
 
 const DrawLuckyCardsPage = () => {
-  const hydrated = useHydrated();
   const { language } = useUIStore();
   const t = TRANSLATIONS[language];
-
-  if (!hydrated) {
-    return <div className="h-full w-full" />;
-  }
 
   return (
     <div className="h-full flex flex-col gap-6 bg-background rounded-4xl p-8 overflow-hidden border border-border shadow-2xl">
@@ -24,7 +18,7 @@ const DrawLuckyCardsPage = () => {
             <Spade size={32} />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">
+            <h1 className="text-3xl font-black tracking-tight text-foreground">
               {t.tabs.draw as string}
             </h1>
             <p className="text-muted-foreground font-medium">

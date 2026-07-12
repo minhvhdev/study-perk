@@ -42,10 +42,6 @@ export function validatePassword(password: string) {
     return 'Password is required.';
   }
 
-  if (password.length < 8) {
-    return 'Password must be at least 8 characters long.';
-  }
-
   return null;
 }
 
@@ -57,6 +53,19 @@ export async function findUserByUsername(db: HfDbClient, username: string) {
      WHERE username = :username
      LIMIT 1`,
     { username },
+  );
+
+  return users[0] ?? null;
+}
+
+export async function findUserById(db: HfDbClient, id: number) {
+  const users = await db.typedQuery(
+    parseUserRow,
+    `SELECT id, username, role, password_hash
+     FROM users
+     WHERE id = :id
+     LIMIT 1`,
+    { id },
   );
 
   return users[0] ?? null;

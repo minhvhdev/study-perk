@@ -11,10 +11,39 @@ const DEFAULT_SETTINGS: StudySettings = {
   ambientSound: 'rain',
 };
 
+type TimerSlice = Pick<
+  StudyState,
+  'status' | 'finishTime' | 'targetSeconds' | 'remainingSeconds'
+>;
+
+export function getRemainingSecondsFromState(
+  state: TimerSlice,
+  now = Date.now(),
+) {
+  if (state.status === 'running' && state.finishTime) {
+    return Math.max(0, Math.ceil((state.finishTime - now) / 1000));
+  }
+  return state.remainingSeconds;
+}
+
 export const useStudyStore = create<StudyState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set, get) => {
+        const completeRunningTimer = () => {
+          const finishedDuration = get().targetSeconds;
+          const isBoosted = get().isBoostEnabled;
+          get().addSession(finishedDuration, isBoosted);
+          useRewardSpinStore.getState().addSpin(isBoosted);
+          set({
+            status: 'idle',
+            finishTime: null,
+            remainingSeconds: get().targetSeconds,
+            isBoostEnabled: false,
+          });
+        };
+
+        return {
         targetSeconds: 3600,
         remainingSeconds: 3600,
         status: 'idle' as TimerStatus,
@@ -22,8 +51,8 @@ export const useStudyStore = create<StudyState>()(
         history: [],
         settings: DEFAULT_SETTINGS,
         studyTypes: [
-          { id: '1', name: 'English', color: '#8b5cf6' },
-          { id: '2', name: 'French', color: '#ec4899' },
+          { id: '1', name: 'English', color: '#2a9d7a' },
+          { id: '2', name: 'French', color: '#3b82a0' },
         ],
         currentTypeId: '1',
         isBoostEnabled: false,
@@ -56,44 +85,19 @@ export const useStudyStore = create<StudyState>()(
           const { status, finishTime } = get();
           if (status !== 'running' || !finishTime) return;
 
-          const now = Date.now();
-          const remaining = Math.max(0, Math.ceil((finishTime - now) / 1000));
-
+          const remaining = getRemainingSecondsFromState(get(), Date.now());
           if (remaining === 0) {
-            const finishedDuration = get().targetSeconds;
-            const isBoosted = get().isBoostEnabled;
-            get().addSession(finishedDuration, isBoosted);
-
-            // Add a spin reward
-            useRewardSpinStore.getState().addSpin(isBoosted);
-
-            set({
-              status: 'idle',
-              finishTime: null,
-              remainingSeconds: get().targetSeconds,
-              isBoostEnabled: false,
-            });
-          } else {
-            set({ remainingSeconds: remaining });
+            completeRunningTimer();
           }
         },
 
         syncWithIndexedDB: () => {
-          const { status, finishTime, targetSeconds } = get();
+          const { status, finishTime } = get();
           if (status === 'running' && finishTime) {
-            const now = Date.now();
-            const remaining = Math.max(0, Math.ceil((finishTime - now) / 1000));
+            const remaining = getRemainingSecondsFromState(get(), Date.now());
             if (remaining === 0) {
-              set({
-                status: 'idle',
-                finishTime: null,
-                remainingSeconds: targetSeconds,
-              });
-            } else {
-              set({ remainingSeconds: remaining });
+              completeRunningTimer();
             }
-          } else if (status === 'idle') {
-            set({ remainingSeconds: targetSeconds });
           }
         },
 
@@ -149,7 +153,8 @@ export const useStudyStore = create<StudyState>()(
         setBoostEnabled: (enabled) => {
           set({ isBoostEnabled: enabled });
         },
-      }),
+        };
+      },
       {
         name: 'study-perk-timer',
         storage: createJSONStorage(() => remoteStateStorage),

@@ -90,7 +90,7 @@ export const Sidebar = () => {
           <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-l from-primary to-purple-500"
+            className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-l from-primary to-teal-600"
           >
             {t.appName}
           </motion.span>
@@ -140,7 +140,7 @@ export const Sidebar = () => {
                     'absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold shadow-sm transition-all',
                     isSidebarCollapsed ? 'top-1.5 right-1.5' : 'right-3',
                     isActive
-                      ? 'bg-purple-400 text-purple-950'
+                      ? 'bg-teal-400 text-teal-950'
                       : 'bg-primary text-primary-foreground',
                   )}
                 >

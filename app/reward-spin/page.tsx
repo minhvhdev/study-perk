@@ -7,17 +7,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Trophy, X } from 'lucide-react';
 import { useUIStore } from '../_store';
 import { TRANSLATIONS } from '../_constants/app-translations.constant';
-import { useHydrated } from '../_hooks/useHydrated';
 
 const RewardSpinPage = () => {
-  const hydrated = useHydrated();
   const { winner, claimWinner } = useRewardSpinStore();
   const { language } = useUIStore();
   const t = TRANSLATIONS[language].spinPage;
-
-  if (!hydrated) {
-    return <div className="h-full w-full" />;
-  }
 
   return (
     <div className="lg:h-[calc(100vh-120px)] flex flex-col lg:flex-row bg-background rounded-4xl overflow-hidden border border-border shadow-2xl relative">
@@ -43,7 +37,7 @@ const RewardSpinPage = () => {
               className="bg-card w-full max-w-md p-8 rounded-4xl border border-primary/20 shadow-2xl flex flex-col items-center text-center gap-6 relative overflow-hidden"
             >
               {/* Confetti-like bits could be added here */}
-              <div className="absolute top-0 inset-x-0 h-2 bg-linear-to-r from-primary via-purple-500 to-primary animate-gradient" />
+              <div className="absolute top-0 inset-x-0 h-2 bg-linear-to-r from-primary via-teal-600/50 to-primary animate-gradient" />
 
               <button
                 onClick={claimWinner}

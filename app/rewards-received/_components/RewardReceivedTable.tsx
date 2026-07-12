@@ -43,7 +43,7 @@ const TYPE_ICONS: Record<RewardEntryType, any> = {
 const TYPE_COLORS: Record<RewardEntryType, string> = {
   monetary: 'text-amber-500',
   leisure: 'text-blue-500',
-  boost: 'text-purple-500',
+  boost: 'text-primary',
   'extra-spin': 'text-green-500',
   nothing: 'text-slate-400',
 };
